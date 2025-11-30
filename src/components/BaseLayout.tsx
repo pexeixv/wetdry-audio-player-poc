@@ -15,10 +15,10 @@ export default function BaseLayout({
   className = '',
 }: BaseLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-[100dvh] lg:min-h-screen flex-col">
       {!disableHeader && <Header />}
 
-      <main className={clsx('flex-1 max-w-5xl mx-auto p-4', className)}>
+      <main className={clsx('flex-1 max-w-5xl mx-auto p-4 flex flex-col', className)}>
         <Outlet />
       </main>
 
