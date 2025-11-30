@@ -3,10 +3,36 @@ import { Play, Pause, RotateCcw } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-import dryAudio from '@/assets/dry.m4a'
-import wetAudio from '@/assets/wet.m4a'
+// Import all audio files
+import maleVocalsDry from '@/assets/male-vocals-dry.m4a'
+import maleVocalsWet from '@/assets/male-vocals-wet.m4a'
+import acousticGuitarDry from '@/assets/acoustic-guitar-dry.m4a'
+import acousticGuitarWet from '@/assets/acoustic-guitar-wet.m4a'
+import femaleVocalsDry from '@/assets/female-vocals-dry.m4a'
+import femaleVocalsWet from '@/assets/female-vocals-wet.m4a'
+import drumsDry from '@/assets/drums_dry.m4a'
+import drumsWet from '@/assets/drums-wet.m4a'
+import synthDry from '@/assets/synth_dry.m4a'
+import synthWet from '@/assets/synth_wet.m4a'
+import electricPianoDry from '@/assets/electric-piano-dry.m4a'
+import electricPianoWet from '@/assets/electric-piano-wet.m4a'
+
+const audioFiles = {
+  'male-vocal': { label: 'Male Vocal', dry: maleVocalsDry, wet: maleVocalsWet },
+  'acoustic-guitar': { label: 'Acoustic Guitar', dry: acousticGuitarDry, wet: acousticGuitarWet },
+  'female-vocal': { label: 'Female Vocal', dry: femaleVocalsDry, wet: femaleVocalsWet },
+  drums: { label: 'Drums', dry: drumsDry, wet: drumsWet },
+  synth: { label: 'Synth', dry: synthDry, wet: synthWet },
+  'electric-piano': { label: 'Electric Piano', dry: electricPianoDry, wet: electricPianoWet },
+}
 
 const AudioComparePlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -14,38 +40,54 @@ const AudioComparePlayer = () => {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedTrack, setSelectedTrack] = useState<keyof typeof audioFiles>('male-vocal')
 
   const dryAudioRef = useRef<HTMLAudioElement>(null)
   const wetAudioRef = useRef<HTMLAudioElement>(null)
   const animationFrameRef = useRef<number>()
 
+  // Reset and load audio when track changes
   useEffect(() => {
-    const dryAudio = dryAudioRef.current
-    const wetAudio = wetAudioRef.current
+    const dry = dryAudioRef.current
+    const wet = wetAudioRef.current
 
-    if (!dryAudio || !wetAudio) return
+    if (!dry || !wet) return
 
-    dryAudio.volume = 1
-    wetAudio.volume = 0
+    // Stop playback
+    setIsPlaying(false)
+    dry.pause()
+    wet.pause()
+
+    // Reset state
+    setCurrentTime(0)
+    setDuration(0)
+    setIsLoading(true)
+
+    // Set volumes
+    dry.volume = 1
+    wet.volume = 0
 
     const handleLoadedData = () => {
-      if (dryAudio.readyState >= 2 && wetAudio.readyState >= 2) {
-        setDuration(dryAudio.duration)
+      if (dry.readyState >= 2 && wet.readyState >= 2) {
+        setDuration(dry.duration)
         setIsLoading(false)
       }
     }
 
-    dryAudio.addEventListener('loadeddata', handleLoadedData)
-    wetAudio.addEventListener('loadeddata', handleLoadedData)
+    dry.addEventListener('loadeddata', handleLoadedData)
+    wet.addEventListener('loadeddata', handleLoadedData)
 
-    dryAudio.load()
-    wetAudio.load()
+    // Load new tracks
+    dry.src = audioFiles[selectedTrack].dry
+    wet.src = audioFiles[selectedTrack].wet
+    dry.load()
+    wet.load()
 
     return () => {
-      dryAudio.removeEventListener('loadeddata', handleLoadedData)
-      wetAudio.removeEventListener('loadeddata', handleLoadedData)
+      dry.removeEventListener('loadeddata', handleLoadedData)
+      wet.removeEventListener('loadeddata', handleLoadedData)
     }
-  }, [])
+  }, [selectedTrack])
 
   useEffect(() => {
     const updateTime = () => {
@@ -136,13 +178,34 @@ const AudioComparePlayer = () => {
       <div className="space-y-6">
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">DryWet Audio Comparison Player</h2>
-          <p className="text-gray-500">Compare dry and processed audio in real-time</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">WetDry Audio Comparison Player</h2>
+        </div>
+
+        {/* Track Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="track-select" className="text-sm font-medium text-gray-700">
+            Select Track
+          </Label>
+          <Select
+            value={selectedTrack}
+            onValueChange={(value) => setSelectedTrack(value as keyof typeof audioFiles)}
+          >
+            <SelectTrigger id="track-select" className="w-full cursor-pointer">
+              <SelectValue placeholder="Select a track" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(audioFiles).map(([key, { label }]) => (
+                <SelectItem key={key} value={key} className="cursor-pointer">
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Hidden audio */}
-        <audio ref={dryAudioRef} preload="auto" src={dryAudio} />
-        <audio ref={wetAudioRef} preload="auto" src={wetAudio} />
+        <audio ref={dryAudioRef} preload="auto" />
+        <audio ref={wetAudioRef} preload="auto" />
 
         {/* Dry/Wet Toggle */}
         <div className="flex items-center justify-center gap-4 p-4 bg-gray-100 rounded-xl border border-gray-300">
