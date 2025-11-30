@@ -8,11 +8,11 @@ function App() {
   return (
     <Routes>
       <Route element={<BaseLayout />}>
-        <Route path="/" element={<Home />} />
         <Route path="/demo" element={<Demo />} />
         <Route path="*" element={<NotFound />} />
       </Route>
       <Route element={<BaseLayout disableHeader disableFooter />}>
+        <Route path="/" element={<Home />} />
         <Route path="/minimal" element={<>Test</>} />
       </Route>
     </Routes>
